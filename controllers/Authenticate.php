@@ -4,30 +4,32 @@ namespace Cookbook\Controllers;
 use \Cookbook\Core\Application;
 
 class Authenticate {
-    public function signup()
+    public function register()
     {
-        return view('signup');
+        return view('register');
     }
 
-    public function createuser(){
+    public function createuser()
+    {
         $credentials = $_POST;
         $credentials->password = $this->hash($credentials);
         Application::get('database')->addNew("users", $credentials);
         return redirect('/');
     }
-    private function hash($credentials){
+    private function hash($credentials)
+    {
         $password = $credentials['password'];
-        $password = crypt($password, '$1$rasmusle$') . "\n";
+        $password = crypt($password, '$1$yammy$') . "\n";
         return $password;
-        
     }
 
     public function login()
     {
-
         return view('login');
     }
-    public function validate(){
+
+    public function validate()
+    {
         $credentials = $_POST;
         $email = $credentials['email'];
         $user = Application::get('database')->getOneUser("users", $email);
@@ -44,9 +46,8 @@ class Authenticate {
         }else{
             return redirect('/admin/login');
         }
-
-
     }
+
     public function logout()
     {
         unset($_SESSION["auth"]);
