@@ -4,7 +4,7 @@
  * api routes
  */
 $router->get('recipes', 'ApiController@recipes');
-$router->get('recipes/{title}', 'ApiController@recipe');
+$router->get('recipe/{id}', 'ApiController@recipe');
 $router->get('ingredients/{title}', 'ApiController@ingredient');
 
 /*
@@ -21,5 +21,5 @@ $router->post('validate', 'Authenticate@validate');
 $router->get('', 'PagesController@home');
 $router->get('create', 'PagesController@create');
 $router->get('edit', 'PagesController@edit');
-$router->get('update', 'PagesController@update');
+$router->get('update/{id}', 'PagesController@update');
 $router->get('delete', 'PagesController@destroy');

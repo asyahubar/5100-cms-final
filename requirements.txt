@@ -1,0 +1,43 @@
+﻿CMS
+
+1.1.2 Overview
+
+Create a custom CMS Website with PHP & MySQL with frontend and backend environment. The website should have several pages (at least four pages), some of them should be public and some others should be accessible only from registered users. In addition each registered user should have the ability of altering/adding the content of the website. The website should have direct connection to the database in which all the data should be stored (user credentials, some of the content etc).
+
+*for more information regarding each section refer to formative assignments.
+
+1.1.3 Requirements
+
+● Create a responsive layout using HTML/CSS and all the Design principles learnt from previous modules
+
+● Create a database that stores all the essential data (such as users, articles, content etc)
+
+● Create two different layouts:
+
+○ one for the unregistered user (visitor)
+
+○ one for the registered & logged in user (editor)
+
+● There should be a login form for the registered users to login
+
+● Once the user is logged in they should be able to change some data on the
+
+Database
+
+● Create a registration form for the unregistered users to login. The registration form should have at least four (4) required fields with data validation (such as username, password, email, name/surname etc)
+
+● Add the basic encryption security when transferring data from and to the database
+
+● A PDF and README.md or README.txt that detail the database design and the PHP techniques followed on the website
+
+ 
+
+Optional:
+
+● Add a recover password page with random link generator
+
+● Add a “verify your account via email” functionality
+
+● Add a live search box for specific content
+
+● Built your website using MVC methodology & OOP

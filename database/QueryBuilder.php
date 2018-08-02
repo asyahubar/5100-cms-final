@@ -21,18 +21,19 @@ class QueryBuilder
     {
         $query = $this->pdo->prepare("SELECT * FROM `recipes`");
         $query->execute();
-        return $query->fetchAll(\PDO::FETCH_OBJ);
+        return $query->fetchAll(\PDO::FETCH_NAMED );
     }
 
     /**
      * returns one full recipe
-     * @param $id
+     * @param string $table
+     * @param string $id
      */
-    public function getOne($id)
+    public function getOne($table, $id)
     {
         // get all recipe data
         // get all ingredients and amounts on recipe
-        $query = $this->pdo->prepare("SELECT * FROM `recipes` WHERE id='{$id}'");
+        $query = $this->pdo->prepare("SELECT * FROM {$table} WHERE id='{$id}'");
         $query->execute();
         // to test
         $q = $this->pdo->prepare("SELECT ingredient_id, ingredient_count FROM `pivot` WHERE recipe_id='{$id}'");

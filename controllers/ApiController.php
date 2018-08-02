@@ -6,24 +6,22 @@ use Cookbook\Core\Application;
 
 class ApiController
 {
-    /**
-     * returns and outputs all recipes
-     * @return JSON
-     */
-    public function recipes()
+    public function recipes($params = null)
     {
         $recipes = Application::get('database')->getAll();
-        $recipes = json_encode($recipes);
-        echo $recipes;
+        echo json_encode($recipes);
         return $recipes;
     }
 
-    public function recipe()
+    public function recipe($params)
     {
-        
+        dd($params['id']);
+        $recipe = Application::get('database')->getOne('recipes', $params['id']);
+        echo json_encode($recipe);
+        return json_encode($recipe);
     }
 
-    public function ingredient()
+    public function ingredient($params)
     {
         
     }
