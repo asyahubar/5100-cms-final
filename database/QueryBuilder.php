@@ -16,29 +16,46 @@ class QueryBuilder
 
     /**
      * returns list of recipes
+     * @return object
      */
     public function getAll()
     {
         $query = $this->pdo->prepare("SELECT * FROM `recipes`");
         $query->execute();
-        return $query->fetchAll(\PDO::FETCH_NAMED );
+        return $query->fetchAll(\PDO::FETCH_OBJ);
     }
 
     /**
      * returns one full recipe
-     * @param string $table
-     * @param string $id
+     * @param $table
+     * @param $id
+     * @return object
      */
     public function getOne($table, $id)
     {
-        // get all recipe data
-        // get all ingredients and amounts on recipe
         $query = $this->pdo->prepare("SELECT * FROM {$table} WHERE id='{$id}'");
         $query->execute();
-        // to test
-        $q = $this->pdo->prepare("SELECT ingredient_id, ingredient_count FROM `pivot` WHERE recipe_id='{$id}'");
-        $q->execute();
-//        return $query->fetch(\PDO::FETCH_OBJ);
+        return $query->fetch(\PDO::FETCH_OBJ);
+    }
+
+    /**
+     * @param string $title
+     * @return array|object
+     */
+    public function getAllwIngredient($title)
+    {
+        //TODO: fix. Returns only one recipe even if there`s many
+        $title = str_replace('-', ' ', $title);
+        $query = $this->pdo->prepare("SELECT recipe_id FROM `pivot` WHERE ingredient_id=(SELECT `id` FROM `ingredients` WHERE title='{$title}')");
+        $query->execute();
+        $arr = $query->fetch(\PDO::FETCH_ASSOC);
+        $result = [];
+        foreach ($arr as $key => $val) {
+            $q = $this->pdo->prepare("SELECT * FROM `recipes` WHERE id='{$val}'");
+            $q->execute();
+            $result[] = $q->fetch(\PDO::FETCH_ASSOC);
+        }
+        return $result;
     }
 
     /**

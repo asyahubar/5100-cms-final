@@ -10,6 +10,11 @@ class Router
         'POST' => []
     ];
 
+    /**
+     * loads routes
+     * @param $file
+     * @return Router
+     */
     public static function load($file)
     {
         $router = new static;
@@ -17,16 +22,31 @@ class Router
         return $router;
     }
 
+    /**
+     * @param string $route
+     * @param string $controller
+     * @param bool $auth
+     */
     public function get($route, $controller, $auth = false)
     {
         $this->routes['GET'][$route] = [$controller, $auth];
     }
 
+    /**
+     * @param string $route
+     * @param string $controller
+     * @param bool $auth
+     */
     public function post($route, $controller, $auth = false)
     {
         $this->routes['POST'][$route] = [$controller, $auth];
     }
 
+    /**
+     * @param $uri
+     * @param $requestMethod
+     * @throws \Exception
+     */
     public function direct($uri, $requestMethod) {
         $route = $this->matchRoute($this->routes[$requestMethod], $uri);
         if(!is_null($route)) {
@@ -40,8 +60,11 @@ class Router
                 $exploded = explode('@', $route[0]);
                 $route['controller'] = $exploded[0];
                 $route['action'] = $exploded[1];
-//                dd($route);
-                $this->callAction($route['controller'], $route['action'], $route['parameters']);
+                if (isset($route['parameters'])){
+                    $this->callAction($route['controller'], $route['action'], $route['parameters']);
+                } else {
+                    $this->callAction($route['controller'], $route['action']);
+                }
             }
         }
     }
@@ -59,26 +82,17 @@ class Router
             if (count($uriParts) !== count($routeParts)) {
                 continue;
             }
-            $matched = false;
             for ($i = 0; $i < count($uriParts); $i++) {
                 if ($uriParts[$i] === $routeParts[$i]) {
-                    $matched = true;
-                    $routeData['parameters'] = null;
                     continue;
                 }
                 if (false !== strpos($routeParts[$i], '{')) {
-                    $paramName = trim($routeParts[$i],'{\}');
-                    $matched = true;
-                    $routeData['parameters'][$paramName] = $uriParts[$i];
+                    $routeData['parameters'][] = $uriParts[$i];
                     continue;
                 }
-                else {
-                    $matched = false;
-                }
+                continue 2;
             }
-            if ($matched) {
-                return $routeData;
-            }
+            return $routeData;
         }
         return null;
     }
@@ -93,10 +107,13 @@ class Router
     public function callAction($controller, $method, $params = null) {
         $c = "\\Cookbook\\Controllers\\{$controller}";
         $c = new $c;
-
         if(!method_exists($c, $method)) {
             throw new \Exception('No method');
         }
-        return $c->$method($params);
+        if (is_array($params) || $params instanceof \Traversable) {
+            return $c->$method(...$params);
+        } else {
+            return $c->$method();
+        }
     }
 }

@@ -5,7 +5,7 @@
  */
 $router->get('recipes', 'ApiController@recipes');
 $router->get('recipe/{id}', 'ApiController@recipe');
-$router->get('ingredients/{title}', 'ApiController@ingredient');
+$router->get('ingredient/{title}', 'ApiController@ingredient');
 
 /*
  * website routes
@@ -19,7 +19,7 @@ $router->post('validate', 'Authenticate@validate');
 
 // browse
 $router->get('', 'PagesController@home');
-$router->get('create', 'PagesController@create');
-$router->get('edit', 'PagesController@edit');
-$router->get('update/{id}', 'PagesController@update');
-$router->get('delete', 'PagesController@destroy');
+$router->get('create', 'PagesController@create', true);
+$router->get('edit', 'PagesController@edit', true);
+$router->get('update/{id}', 'PagesController@update', true);
+$router->get('delete', 'PagesController@destroy', true);
