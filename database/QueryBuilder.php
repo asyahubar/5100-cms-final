@@ -33,9 +33,9 @@ class QueryBuilder
      */
     public function getOne($table, $id)
     {
-        $query = $this->pdo->prepare("SELECT * FROM {$table} WHERE id='{$id}'");
-        $query->execute();
-        return $query->fetch(\PDO::FETCH_OBJ);
+        $q = $this->pdo->prepare("SELECT * FROM {$table} WHERE id='{$id}'");
+        $q->execute();
+        return $q->fetch(\PDO::FETCH_OBJ);
     }
 
     /**
@@ -45,17 +45,45 @@ class QueryBuilder
     public function getAllwIngredient($title)
     {
         //TODO: fix. Returns only one recipe even if there`s many
-        $title = str_replace('-', ' ', $title);
-        $query = $this->pdo->prepare("SELECT recipe_id FROM `pivot` WHERE ingredient_id=(SELECT `id` FROM `ingredients` WHERE title='{$title}')");
-        $query->execute();
-        $arr = $query->fetch(\PDO::FETCH_ASSOC);
-        $result = [];
-        foreach ($arr as $key => $val) {
-            $q = $this->pdo->prepare("SELECT * FROM `recipes` WHERE id='{$val}'");
-            $q->execute();
-            $result[] = $q->fetch(\PDO::FETCH_ASSOC);
+        if (strpos($title, '-')) $title = str_replace('-', ' ', $title);
+        if (strpos($title, '+')) $title = str_replace('+', ' ', $title);
+        if (strpos($title, '_')) $title = str_replace('_', ' ', $title);
+        $que = $this->pdo->prepare("SELECT `recipe_id` FROM `pivot` WHERE `ingredient_id` IN (SELECT id FROM `ingredients` WHERE title='{$title}')");
+        $que->execute();
+        $arr = $que->fetchAll(\PDO::FETCH_NUM);
+        foreach ($arr as $key => $line) {
+            $arr[$key] = $line[0];
         }
+        $arr = implode(",", $arr);
+        $q = $this->pdo->prepare("SELECT * FROM `recipes` WHERE id IN ({$arr})");
+        $q->execute();
+        $result = $q->fetchAll(\PDO::FETCH_ASSOC);
         return $result;
+    }
+
+    /**
+     * add a user to the database
+     * @param array $credentials
+     */
+    public function addUser($credentials)
+    {
+        $sql = sprintf("INSERT INTO `users` (%s) VALUES (%s)",
+            implode(", ", array_keys($credentials)),
+            ":" . implode(", :", array_keys($credentials))
+        );
+        $query = $this->pdo->prepare($sql);
+        $query->execute($credentials);
+    }
+
+    /**
+     * @param string $email
+     * @return object
+     */
+    public function getOneUser($email)
+    {
+        $query = $this->pdo->prepare("SELECT * FROM `users` WHERE email='{$email}'");
+        $query->execute();
+        return $query->fetch(\PDO::FETCH_OBJ);
     }
 
     /**

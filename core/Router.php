@@ -54,7 +54,7 @@ class Router
                 if (isset($_SESSION['auth'])) {
                     $this->callAction(...explode('@', $route[0]));
                 } else {
-                    json_encode('login failed');
+                    echo '<h1><center>You are not authorized, go to <a href="/login">login page</a></center></h1>';
                 }
             } else {
                 $exploded = explode('@', $route[0]);

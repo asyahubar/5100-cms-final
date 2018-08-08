@@ -20,6 +20,6 @@ $router->post('validate', 'Authenticate@validate');
 // browse
 $router->get('', 'PagesController@home');
 $router->get('create', 'PagesController@create', true);
-$router->get('edit', 'PagesController@edit', true);
+$router->get('edit/{id}', 'PagesController@edit', true);
 $router->get('update/{id}', 'PagesController@update', true);
-$router->get('delete', 'PagesController@destroy', true);
+$router->get('delete/{id}', 'PagesController@destroy', true);

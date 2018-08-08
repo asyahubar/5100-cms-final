@@ -20,9 +20,7 @@ Create a custom CMS Website with PHP & MySQL with frontend and backend environme
 
 ● There should be a login form for the registered users to login
 
-● Once the user is logged in they should be able to change some data on the
-
-Database
+● Once the user is logged in they should be able to change some data on the database
 
 ● Create a registration form for the unregistered users to login. The registration form should have at least four (4) required fields with data validation (such as username, password, email, name/surname etc)
 

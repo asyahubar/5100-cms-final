@@ -7,26 +7,26 @@ class PagesController
 {
     public function home()
     {
-        
+        return view('home');
     }
 
     public function create()
     {
-        
+        return view('create');
     }
 
-    public function edit()
+    public function edit($id)
     {
-        
+        return view('edit');
     }
 
-    public function update()
+    public function update($id)
     {
-        
+        return view('update');
     }
 
-    public function destroy()
+    public function destroy($id)
     {
-        
+        return view('destroy');
     }
 }

@@ -6,16 +6,18 @@ use \Cookbook\Core\Application;
 class Authenticate {
     public function register()
     {
-        return view('register');
+        return view('sign');
     }
 
     public function createuser()
     {
+        // TODO: prevention from repetition
         $credentials = $_POST;
-        $credentials->password = $this->hash($credentials);
-        Application::get('database')->addNew("users", $credentials);
-        return redirect('/');
+        $credentials['password'] = $this->hash($credentials);
+        Application::get('database')->addUser($credentials);
+        return redirect('/login');
     }
+
     private function hash($credentials)
     {
         $password = $credentials['password'];
@@ -32,19 +34,18 @@ class Authenticate {
     {
         $credentials = $_POST;
         $email = $credentials['email'];
-        $user = Application::get('database')->getOneUser("users", $email);
+        $user = Application::get('database')->getOneUser($email);
         if(!$user){
-            return redirect("/admin/login");
+            return redirect("/login");
         }
 
         $password = $this->hash($credentials);
 
         if($password === $user->password) {
             $_SESSION['auth'] = $user;
-            return redirect('/admin/products');
-            
+            return redirect('/');
         }else{
-            return redirect('/admin/login');
+            return redirect('/login');
         }
     }
 
