@@ -16,7 +16,7 @@ function view($file, $data = [])
 {
     $file = str_replace('.', '/', $file);
     extract($data);
-    require "views-may-be-vue/{$file}.view.php";
+    require "views/{$file}.view.php";
 }
 
 function redirect($path)

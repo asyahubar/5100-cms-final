@@ -34,10 +34,10 @@ CREATE TABLE `ingredients` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `measurments`
+-- Table structure for table `measurements`
 --
 
-CREATE TABLE `measurments` (
+CREATE TABLE `measurements` (
   `id` int(10) UNSIGNED NOT NULL,
   `title` varchar(45) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -50,35 +50,25 @@ CREATE TABLE `measurments` (
 
 CREATE TABLE `pivot` (
   `id` int(10) UNSIGNED NOT NULL,
-  `recepie_id` int(10) UNSIGNED NOT NULL,
+  `recipe_id` int(10) UNSIGNED NOT NULL,
   `ingredient_id` int(10) UNSIGNED NOT NULL,
-  `measurment_id` int(10) UNSIGNED NOT NULL,
+  `measurement_id` int(10) UNSIGNED NOT NULL,
   `ingredient_count` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `recepies`
+-- Table structure for table `recipes`
 --
 
-CREATE TABLE `recepies` (
+CREATE TABLE `recipes` (
   `id` int(10) UNSIGNED NOT NULL,
   `title` varchar(100) NOT NULL,
   `time_preparing` int(6) UNSIGNED DEFAULT NULL,
   `instructions` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `roles`
---
-
-CREATE TABLE `roles` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `title` varchar(45) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -90,7 +80,7 @@ CREATE TABLE `users` (
   `id` int(10) UNSIGNED NOT NULL,
   `email` varchar(45) NOT NULL,
   `password` varchar(45) NOT NULL,
-  `role_id` int(10) UNSIGNED NOT NULL
+  `nickname` varchar(45) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -106,9 +96,9 @@ ALTER TABLE `ingredients`
   ADD UNIQUE KEY `title_UNIQUE` (`title`);
 
 --
--- Indexes for table `measurments`
+-- Indexes for table `measurements`
 --
-ALTER TABLE `measurments`
+ALTER TABLE `measurements`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `id_UNIQUE` (`id`),
   ADD UNIQUE KEY `title_UNIQUE` (`title`);
@@ -117,7 +107,7 @@ ALTER TABLE `measurments`
 -- Indexes for table `pivot`
 --
 ALTER TABLE `pivot`
-  ADD PRIMARY KEY (`id`,`recepie_id`,`ingredient_id`),
+  ADD PRIMARY KEY (`id`,`recipe_id`,`ingredient_id`),
   ADD UNIQUE KEY `id_UNIQUE` (`id`),
   ADD KEY `fk_recepies_has_ingredients_ingredients1_idx` (`ingredient_id`),
   ADD KEY `fk_recepies_has_ingredients_recepies_idx` (`recepie_id`),
@@ -126,22 +116,15 @@ ALTER TABLE `pivot`
 --
 -- Indexes for table `recepies`
 --
-ALTER TABLE `recepies`
+ALTER TABLE `recipes`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `id_UNIQUE` (`id`);
 
---
--- Indexes for table `roles`
---
-ALTER TABLE `roles`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `id_UNIQUE` (`id`);
 
 --
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`,`role_id`),
   ADD UNIQUE KEY `id_UNIQUE` (`id`),
   ADD UNIQUE KEY `email_UNIQUE` (`email`),
   ADD KEY `fk_users_roles1_idx` (`role_id`);
@@ -158,7 +141,7 @@ ALTER TABLE `ingredients`
 --
 -- AUTO_INCREMENT for table `measurments`
 --
-ALTER TABLE `measurments`
+ALTER TABLE `measurements`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT for table `pivot`
@@ -168,15 +151,10 @@ ALTER TABLE `pivot`
 --
 -- AUTO_INCREMENT for table `recepies`
 --
-ALTER TABLE `recepies`
+ALTER TABLE `recipes`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT for table `roles`
---
-ALTER TABLE `roles`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
---
--- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
@@ -188,15 +166,9 @@ ALTER TABLE `users`
 -- Constraints for table `pivot`
 --
 ALTER TABLE `pivot`
-  ADD CONSTRAINT `fk_recepies_has_ingredients_ingredients1` FOREIGN KEY (`ingredient_id`) REFERENCES `ingredients` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  ADD CONSTRAINT `fk_recepies_has_ingredients_measurments1` FOREIGN KEY (`measurment_id`) REFERENCES `measurments` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  ADD CONSTRAINT `fk_recepies_has_ingredients_recepies` FOREIGN KEY (`recepie_id`) REFERENCES `recepies` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
-
---
--- Constraints for table `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `fk_users_roles1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  ADD CONSTRAINT `fk_recipes_has_ingredients_ingredients1` FOREIGN KEY (`ingredient_id`) REFERENCES `ingredients` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `fk_recipes_has_ingredients_measurments1` FOREIGN KEY (`measurement_id`) REFERENCES `measurements` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  ADD CONSTRAINT `fk_recipes_has_ingredients_recepies` FOREIGN KEY (`recipe_id`) REFERENCES `recipes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

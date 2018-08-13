@@ -15,27 +15,42 @@ class QueryBuilder
     }
 
     /**
-     * returns list of recipes
+     * returns list of recipes by default
+     * @param string $table
      * @return object
      */
-    public function getAll()
+    public function getAll($table = 'recipes')
     {
-        $query = $this->pdo->prepare("SELECT * FROM `recipes`");
+        $query = $this->pdo->prepare("SELECT * FROM {$table}");
         $query->execute();
-        return $query->fetchAll(\PDO::FETCH_OBJ);
+        return $query->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     /**
      * returns one full recipe
-     * @param $table
-     * @param $id
-     * @return object
+     * @param string $table
+     * @param string|integer $idValue
+     * @param string $idTitle
+     * @return array
      */
-    public function getOne($table, $id)
+    public function getOne($table, $idValue, $idTitle = 'id')
     {
-        $q = $this->pdo->prepare("SELECT * FROM {$table} WHERE id='{$id}'");
+        $q = $this->pdo->prepare("SELECT * FROM {$table} WHERE {$idTitle}='{$idValue}'");
         $q->execute();
-        return $q->fetch(\PDO::FETCH_OBJ);
+        return $q->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * @param string $table
+     * @param string|integer $idValue
+     * @param string $idTitle
+     * @return mixed
+     */
+    public function getMany($table, $idValue, $idTitle = 'id')
+    {
+        $q = $this->pdo->prepare("SELECT * FROM {$table} WHERE {$idTitle} IN ({$idValue})");
+        $q->execute();
+        return $q->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     /**
@@ -48,17 +63,59 @@ class QueryBuilder
         if (strpos($title, '-')) $title = str_replace('-', ' ', $title);
         if (strpos($title, '+')) $title = str_replace('+', ' ', $title);
         if (strpos($title, '_')) $title = str_replace('_', ' ', $title);
-        $que = $this->pdo->prepare("SELECT `recipe_id` FROM `pivot` WHERE `ingredient_id` IN (SELECT id FROM `ingredients` WHERE title='{$title}')");
+        $ingredient = $this->getOne('ingredients', $title, 'title');
+        $que = $this->pdo->prepare("SELECT `recipe_id` FROM `pivot` WHERE `ingredient_id` IN ($ingredient)");
         $que->execute();
         $arr = $que->fetchAll(\PDO::FETCH_NUM);
         foreach ($arr as $key => $line) {
             $arr[$key] = $line[0];
         }
         $arr = implode(",", $arr);
-        $q = $this->pdo->prepare("SELECT * FROM `recipes` WHERE id IN ({$arr})");
-        $q->execute();
-        $result = $q->fetchAll(\PDO::FETCH_ASSOC);
+        $result = $this->getOne('recipes', $arr);
         return $result;
+    }
+
+    /**
+     * @param string $type
+     * @param string $idValue
+     * @param string $idTitle
+     * @return array|object
+     */
+    public function getAllFull($type, $idValue = '', $idTitle = '')
+    {
+        switch ($type) {
+            case 'one':
+                $pivot = $this->getMany('pivot', $idValue, $idTitle);
+                break;
+            case 'all':
+                $pivot = $this->getAll('pivot');
+                break;
+            default:
+                dd('There is some problem in the first `type` argument');
+        }
+        $ingredientIds = [];
+        $measurementIds = [];
+        foreach ($pivot as $key => $val) {
+            $ingredientIds[] = $val['ingredient_id'];
+            $measurementIds[] = $val['measurement_id'];
+        }
+        $ingredientIds = implode(",", $ingredientIds);
+        $measurementIds = implode(",", $measurementIds);
+        $ingredients = $this->getMany('ingredients', $ingredientIds);
+        $measurements = $this->getMany('measurements', $measurementIds);
+        for ($i = 0; $i < count($pivot); $i++) {
+            for ($x = 0; $x < count($ingredients); $x++) {
+                if ($pivot[$i]['ingredient_id'] === $ingredients[$x]['id']) {
+                    $pivot[$i]['ingredient_title'] = $ingredients[$x]['title'];
+                }
+            }
+            for ($x = 0; $x < count($measurements); $x++) {
+                if ($pivot[$i]['measurement_id'] === $measurements[$x]['id']) {
+                    $pivot[$i]['measurement_title'] = $measurements[$x]['title'];
+                }
+            }
+        }
+        return $pivot;
     }
 
     /**
@@ -88,29 +145,121 @@ class QueryBuilder
 
     /**
      * adds a new recipe to the db
-     * @param $payload
+     * @param array $data
      */
-    public function addRecipe($payload)
+    public function addRecipe($data)
     {
-        //TODO: needs to add
-        // - one row to recipes
-        // - all new ingredients if needed (`for` loop)
-        // - connections in pivot table (`for` loop)
-
-        // and $query->debugDumpParams();
+        $title = $data['title'];
+        $time = $data['time_preparing'];
+        $instructions = $data['instructions'];
+        $image = isset($data['image']) ? $data['image'] : "";
+        $q = $this->pdo->prepare("INSERT INTO `recipes` SET title='{$title}', time_preparing={$time}, instructions='{$instructions}', image='{$image}'");
+        $q->execute();
+        $qq = $this->pdo->prepare("SELECT * FROM recipes ORDER BY ID DESC LIMIT 1");
+        $qq->execute();
+        $recipeId = $qq->fetch(\PDO::FETCH_NUM);
+        $measurements = [];
+        $ingredientCount = [];
+        $ingredients = [];
+        foreach ($data as $key => $value) {
+            if (substr($key, 0, -1) == 'ingredient_count') {
+                $n = substr($key, -1);
+                $ingredientCount[$n] = $value;
+            } elseif (substr($key, 0, -2) == 'ingredient_count') {
+                $n = substr($key, -2);
+                $ingredientCount[$n] = $value;
+            }
+            if (substr($key, 0, -1) == 'measurement') {
+                $n = substr($key, -1);
+                $measurements[$n] = $value;
+            } elseif (substr($key, 0, -2) == 'measurement') {
+                $n = substr($key, -2);
+                $measurements[$n] = $value;
+            }
+            if (substr($key, 0, -1) == 'ingredient') {
+                $n = substr($key, -1);
+                $ingredients[$n] = $value;
+            } elseif (substr($key, 0, -2) == 'ingredient') {
+                $n = substr($key, -2);
+                $ingredients[$n] = $value;
+            }
+        }
+        for ($i = 0; $i < count($measurements); $i++) {
+            $qu = $this->pdo->prepare("INSERT INTO `pivot` SET recipe_id={$recipeId[0]}, ingredient_id={$ingredients[$i]}, measurement_id={$measurements[$i]}, ingredient_count={$ingredientCount[$i]}");
+            $qu->execute();
+            $qu = '';
+        }
     }
 
     /**
      * updates one recipe
-     * @param $payload
+     * @param array $data
+     * @param integer $id
      */
-    public function update($payload)
+    public function update($data, $id)
     {
         //TODO: may need to update
-        // - one row in recipes
-        // - connections in pivot table
-
-        // and $query->debugDumpParams();
+        $title = $data['title'];
+        $time = $data['time_preparing'];
+        $instructions = $data['instructions'];
+        $image = isset($data['image']) ? $data['image'] : "";
+        if ($image === "") {
+            $q = $this->pdo->prepare("UPDATE `recipes` SET title='{$title}', time_preparing={$time}, instructions='{$instructions}'  WHERE id='{$id}'");
+            $q->execute();
+        } else {
+            $q = $this->pdo->prepare("UPDATE `recipes` SET title='{$title}', time_preparing={$time}, instructions='{$instructions}', image='{$image}'  WHERE id='{$id}'");
+            $q->execute();
+        }
+        $qq = $this->pdo->prepare("SELECT * FROM recipes ORDER BY ID DESC LIMIT 1");
+        $qq->execute();
+        $recipeId = $qq->fetch(\PDO::FETCH_NUM);
+        $measurements = [];
+        $ingredientCount = [];
+        $ingredients = [];
+        $pivot = [];
+        foreach ($data as $key => $value) {
+            if (substr($key, 0, -1) == 'ingredient_count') {
+                $n = substr($key, -1);
+                $ingredientCount[$n] = $value;
+            } elseif (substr($key, 0, -2) == 'ingredient_count') {
+                $n = substr($key, -2);
+                $ingredientCount[$n] = $value;
+            }
+            if (substr($key, 0, -1) == 'measurement_id') {
+                $n = substr($key, -1);
+                $measurements[$n] = $value;
+            } elseif (substr($key, 0, -2) == 'measurement_id') {
+                $n = substr($key, -2);
+                $measurements[$n] = $value;
+            }
+            if (substr($key, 0, -1) == 'ingredient_id') {
+                $n = substr($key, -1);
+                $ingredients[$n] = $value;
+            } elseif (substr($key, 0, -2) == 'ingredient_id') {
+                $n = substr($key, -2);
+                $ingredients[$n] = $value;
+            }
+            if (substr($key, 0, -1) == 'ingredient_id') {
+                $n = substr($key, -1);
+                $ingredients[$n] = $value;
+            } elseif (substr($key, 0, -2) == 'ingredient_id') {
+                $n = substr($key, -2);
+                $ingredients[$n] = $value;
+            }
+            if (substr($key, 0, -1) == 'pivot_id') {
+                $n = substr($key, -1);
+                $pivot[$n] = $value;
+            } elseif (substr($key, 0, -2) == 'pivot_id') {
+                $n = substr($key, -2);
+                $pivot[$n] = $value;
+            }
+        }
+        for ($i = 0; $i < count($measurements); $i++) {
+            $qu = $this->pdo->prepare("UPDATE `pivot` SET ingredient_id={$ingredients[$i]}, measurement_id={$measurements[$i]}, ingredient_count={$ingredientCount[$i]} WHERE id={$pivot[$i]}");
+            $qu->execute();
+            $qu->debugDumpParams();
+            $qu = '';
+        }
     }
 
     /**
@@ -121,9 +270,7 @@ class QueryBuilder
     {
         $query = $this->pdo->prepare("DELETE FROM `recipes` WHERE id='{$recipe_id}'");
         $query->execute();
-        $query->debugDumpParams();
         $q = $this->pdo->prepare("DELETE FROM `pivot` WHERE recipe_id='{$recipe_id}'");
         $q->execute();
-        $q->debugDumpParams();
     }
 }
