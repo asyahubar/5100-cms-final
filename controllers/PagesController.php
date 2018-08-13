@@ -62,13 +62,6 @@ class PagesController
         return redirect('/');
     }
 
-    //TODO: delete this
-    public function test()
-    {
-        $test = Application::get('database')->getAllFull();
-        echo $test;
-    }
-
     private function handleUpload()
     {
         if($_FILES['image']['error'] != 4) {
